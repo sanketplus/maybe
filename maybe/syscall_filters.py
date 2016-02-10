@@ -298,7 +298,11 @@ SyscallFilter(
     signature=("int", (("const char *", "pathname"), ("mode_t", "mode"),)),
     format=lambda args: format_mknod(args[0],args[1]),
     substitute=return_zero
+<<<<<<< HEAD
     ),
+=======
+),
+>>>>>>> add-mknod
 # Write to file
 # TODO: Handle "fwrite"?
 SyscallFilter(
