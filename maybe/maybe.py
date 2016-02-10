@@ -107,8 +107,9 @@ def get_operations(debugger):
             syscall_filter = SYSCALL_FILTERS[syscall.name]
             print "\n#### sys.name::",syscall.name
             arguments = [parse_argument(argument) for argument in syscall.arguments]
-            print "\n#### syscall parsed args::",arguments
+            print "#### syscall args::",arguments
             operation = syscall_filter.format(arguments)
+            print "### op::",operation
             if operation is not None:
                 operations.append(operation)
 
@@ -134,7 +135,7 @@ def main():
     command = " ".join([(("'%s'" % arg) if (" " in arg) else arg) for arg in argv[1:]])
     print "\n###command we got:",command
     
-arguments = argv[1:]
+    arguments = argv[1:]
     arguments[0] = locateProgram(arguments[0])
     print "\n###arguments we got:",arguments
     try:

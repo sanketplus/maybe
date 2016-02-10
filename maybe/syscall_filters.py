@@ -12,6 +12,7 @@ from pwd import getpwuid
 from grp import getgrgid
 from collections import namedtuple
 from os import O_WRONLY, O_RDWR, O_APPEND, O_CREAT, O_TRUNC
+from stat import S_IFIFO
 from os.path import abspath, dirname, basename, exists
 
 from .utilities import T, format_permissions
@@ -94,6 +95,13 @@ def format_open(path, flags):
     else:
         return None
 
+def format_mknod(path,type):
+    path = abspath(path)
+    if (type & S_IFIFO):
+        return "%s %s" %(T.red("create named pipe"), T.underline(path))
+    else:
+        #TODO: add support for block and char special files
+        return None
 
 def substitute_open(path, flags):
     path = abspath(path)
@@ -285,6 +293,12 @@ SyscallFilter(
     format=lambda args: format_open(args[1], args[2]),
     substitute=lambda args: substitute_open(args[1], args[2])
 ),
+SyscallFilter(
+    name="mknod",
+    signature=("int", (("const char *", "pathname"), ("mode_t", "mode"),)),
+    format=lambda args: format_mknod(args[0],args[1]),
+    substitute=return_zero
+    ),
 # Write to file
 # TODO: Handle "fwrite"?
 SyscallFilter(
