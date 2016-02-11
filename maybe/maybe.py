@@ -10,7 +10,6 @@
 
 from sys import argv, exit
 from subprocess import call
-
 from ptrace.tools import locateProgram
 from ptrace.debugger import ProcessSignal, NewProcessEvent, ProcessExecution, ProcessExit
 from ptrace.debugger.child import createChild
@@ -98,8 +97,7 @@ def get_operations(debugger):
             continue
 
         process = syscall_event.process
-        syscall_state = process.syscall_state
-
+        syscall_state = process.syscall_state        
         syscall = syscall_state.event(format_options)
 
         if syscall and syscall_state.next_event == "exit":
@@ -107,7 +105,7 @@ def get_operations(debugger):
             syscall_filter = SYSCALL_FILTERS[syscall.name]
             print "\n#### sys.name::",syscall.name
             arguments = [parse_argument(argument) for argument in syscall.arguments]
-            print "#### syscall args::",arguments
+            print "#### syscall args::",arguments#," :: ",os.getcwd()
             operation = syscall_filter.format(arguments)
             print "### op::",operation
             if operation is not None:
