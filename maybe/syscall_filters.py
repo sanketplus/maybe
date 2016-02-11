@@ -12,7 +12,7 @@ from pwd import getpwuid
 from grp import getgrgid
 from collections import namedtuple
 from os import O_WRONLY, O_RDWR, O_APPEND, O_CREAT, O_TRUNC
-from stat import S_IFIFO
+from stat import S_IFREG, S_IFIFO
 from os.path import abspath, dirname, basename, exists
 
 from .utilities import T, format_permissions
@@ -98,7 +98,9 @@ def format_open(path, flags):
 
 def format_mknod(path, type):
     path = abspath(path)
-    if (type & S_IFIFO):
+    if (type & S_IFREG):
+        return "%s %s" % (T.red("create file"), T.underline(path))
+    else if (type & S_IFIFO)::
         return "%s %s" % (T.red("create named pipe"), T.underline(path))
     else:
         # TODO: add support for block and char special files
