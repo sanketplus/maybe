@@ -95,14 +95,14 @@ def format_open(path, flags):
     else:
         return None
 
-def format_mknod(path,type):
+
+def format_mknod(path, type):
     path = abspath(path)
     if (type & S_IFIFO):
-        return "%s %s" %(T.red("create named pipe"), T.underline(path))
+        return "%s %s" % (T.red("create named pipe"), T.underline(path))
     else:
-        #TODO: add support for block and char special files
+        # TODO: add support for block and char special files
         return None
- 
 
 
 def substitute_open(path, flags):
