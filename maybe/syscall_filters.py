@@ -100,7 +100,7 @@ def format_mknod(path, type):
     path = abspath(path)
     if (type & S_IFREG):
         return "%s %s" % (T.red("create file"), T.underline(path))
-    else if (type & S_IFIFO)::
+    elif (type & S_IFIFO)::
         return "%s %s" % (T.red("create named pipe"), T.underline(path))
     else:
         # TODO: add support for block and char special files
