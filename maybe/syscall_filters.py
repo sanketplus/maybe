@@ -143,6 +143,13 @@ def substitute_dup(file_descriptor_old, file_descriptor_new=None):
         return None
 
 
+def format_utimensat(path):
+    path=abspath(path)
+    if path in allowed_files:
+        return None
+    elif exists(path):
+        return "%s %s" % (T.yellow("modify timestamps"), T.underline(path))
+
 SyscallFilter = namedtuple("SyscallFilter", ["name", "signature", "format", "substitute"])
 
 SYSCALL_FILTERS = [
@@ -349,5 +356,12 @@ SyscallFilter(
     signature=("int", (("int", "oldfd"), ("int", "newfd"), ("int", "flags"),)),
     format=lambda args: None,
     substitute=lambda args: substitute_dup(args[0], args[1])
+),
+# Change file timestamps
+SyscallFilter(
+    name="utimensat",
+    signature=("int", (("int", "dirfd"), ("const char *", "pathname"), ("const struct timespec", "times[2]"),("int","flags"),)),
+    format=lambda args: format_utimensat(args[1]),
+    substitute=return_zero
 ),
 ]
