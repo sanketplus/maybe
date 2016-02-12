@@ -14,7 +14,7 @@ from collections import namedtuple
 from os import O_WRONLY, O_RDWR, O_APPEND, O_CREAT, O_TRUNC
 from stat import S_IFREG, S_IFIFO
 from os.path import abspath, dirname, basename, exists
-
+import os
 from .utilities import T, format_permissions
 
 

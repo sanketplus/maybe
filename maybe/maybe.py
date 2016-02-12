@@ -18,6 +18,7 @@ from ptrace.func_call import FunctionCallOptions
 from ptrace.syscall import SYSCALL_PROTOTYPES, FILENAME_ARGUMENTS
 from ptrace.syscall.posix_constants import SYSCALL_ARG_DICT
 from ptrace.syscall.syscall_argument import ARGUMENT_CALLBACK
+import os
 
 from .syscall_filters import SYSCALL_FILTERS
 from .utilities import T, SYSCALL_REGISTER, RETURN_VALUE_REGISTER
@@ -29,8 +30,7 @@ try:
     input = raw_input
 except NameError:
     pass
-
-
+currentPath=""
 # Register filtered syscalls with python-ptrace so they are parsed correctly
 SYSCALL_PROTOTYPES.clear()
 FILENAME_ARGUMENTS.clear()
@@ -73,6 +73,8 @@ format_options = FunctionCallOptions(
 
 
 def get_operations(debugger):
+    global currentPath
+    currentPath=os.getcwd()
     operations = []
 
     while True:
@@ -108,10 +110,17 @@ def get_operations(debugger):
             print "#### syscall args::",arguments#," :: ",os.getcwd()
             operation = syscall_filter.format(arguments)
             print "### op::",operation
+            
+            if syscall.name == "openat":
+                    print "!!!detected!!!"
+                    currentPath=currentPath+"/"+arguments[1]
+                    syscall.enter()
+                    syscall.exit()
             if operation is not None:
-                operations.append(operation)
+                operations.append(operation+ " :: "+ currentPath)
 
             return_value = syscall_filter.substitute(arguments)
+            print "### return::",return_value
             if return_value is not None:
                 # Set invalid syscall number to prevent call execution
                 process.setreg(SYSCALL_REGISTER, -1)
@@ -132,7 +141,8 @@ def main():
     # This is basically "shlex.join"
     command = " ".join([(("'%s'" % arg) if (" " in arg) else arg) for arg in argv[1:]])
     print "\n###command we got:",command
-    
+    currentPath=os.getcwd()
+
     arguments = argv[1:]
     arguments[0] = locateProgram(arguments[0])
     print "\n###arguments we got:",arguments
