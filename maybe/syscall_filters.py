@@ -96,17 +96,6 @@ def format_open(path, flags):
         return None
 
 
-def format_mknod(path, type):
-    path = abspath(path)
-    if (type & S_IFREG):
-        return "%s %s" % (T.red("create file"), T.underline(path))
-    elif (type & S_IFIFO):
-        return "%s %s" % (T.red("create named pipe"), T.underline(path))
-    else:
-        # TODO: add support for block and char special files
-        return None
-
-
 def substitute_open(path, flags):
     path = abspath(path)
     if path in allowed_files:
@@ -117,6 +106,19 @@ def substitute_open(path, flags):
         file_descriptors[file_descriptor] = path
         return file_descriptor
     else:
+        return None
+
+
+def format_mknod(path, type):
+    path = abspath(path)
+    if path in allowed_files:
+        return None
+    elif (type & S_IFREG) and not exists(path):
+        return "%s %s" % (T.cyan("create file"), T.underline(path))
+    elif (type & S_IFIFO) and not exists(path):
+        return "%s %s" % (T.cyan("create named pipe"), T.underline(path))
+    else:
+        # TODO: add support for block and char special files
         return None
 
 
@@ -303,6 +305,24 @@ SyscallFilter(
     format=lambda args: format_mknod(args[0],args[1]),
     substitute=return_zero
 ),
+SyscallFilter(
+    name="mknodat",
+    signature=("int", (("int", "dirfd"), ("const char *", "pathname"), ("mode_t", "mode"),)),
+    format=lambda args: format_mknod(args[1],args[2]),
+    substitute=return_zero
+),
+SyscallFilter(
+    name="mkfifo",
+    signature=("int", (("const char *", "pathname"), ("mode_t", "mode"),)),
+    format=lambda args: format_mknod(args[0],args[1]),
+    substitute=return_zero
+), 
+SyscallFilter(
+    name="mkfifoat",
+    signature=("int", (("int", "dirfd"), ("const char *", "pathname"), ("mode_t", "mode"),)),
+    format=lambda args: format_mknod(args[1],args[2]),
+    substitute=return_zero
+),  
 # Write to file
 # TODO: Handle "fwrite"?
 SyscallFilter(
