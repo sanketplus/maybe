@@ -122,6 +122,17 @@ def format_mknod(path, type):
         return None
 
 
+def format_mkfifo(path):
+    path = abspath(path)
+    if path in allowed_files:
+        return None
+    elif not exists(path):
+        return "%s %s" % (T.cyan("create named pipe"), T.underline(path))
+    else:
+        # TODO: add support for block and char special files
+        return None
+
+
 def format_write(file_descriptor, byte_count):
     if file_descriptor in file_descriptors:
         path = file_descriptors[file_descriptor]
@@ -314,15 +325,15 @@ SyscallFilter(
 SyscallFilter(
     name="mkfifo",
     signature=("int", (("const char *", "pathname"), ("mode_t", "mode"),)),
-    format=lambda args: format_mknod(args[0],args[1]),
+    format=lambda args: format_mkfifo(args[0]),
     substitute=return_zero
-), 
+),
 SyscallFilter(
     name="mkfifoat",
     signature=("int", (("int", "dirfd"), ("const char *", "pathname"), ("mode_t", "mode"),)),
-    format=lambda args: format_mknod(args[1],args[2]),
+    format=lambda args: format_mkfifo(args[1]),
     substitute=return_zero
-),  
+),
 # Write to file
 # TODO: Handle "fwrite"?
 SyscallFilter(
