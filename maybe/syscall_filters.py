@@ -123,13 +123,7 @@ def format_mknod(path, type):
 
 
 def substitute_mknod(path, type):
-    path = abspath(path)
-    if exists(path):
-        return None
-    elif (type & S_IFREG) or (type & S_IFIFO):
-        return 0
-    else:
-        return None   
+    return None if (format_mknod(path, type) is None) else 0 
 
 
 def format_write(file_descriptor, byte_count):
