@@ -111,11 +111,11 @@ def substitute_open(path, flags):
 
 def format_mknod(path, type):
     path = abspath(path)
-    if path in allowed_files:
+    if exists(path):
         return None
-    elif (type & S_IFREG) and not exists(path):
+    elif (type & S_IFREG):
         return "%s %s" % (T.cyan("create file"), T.underline(path))
-    elif (type & S_IFIFO) and not exists(path):
+    elif (type & S_IFIFO):
         return "%s %s" % (T.cyan("create named pipe"), T.underline(path))
     else:
         # TODO: add support for block and char special files
