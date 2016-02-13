@@ -122,6 +122,16 @@ def format_mknod(path, type):
         return None
 
 
+def substitute_mknod(path, type):
+    path = abspath(path)
+    if exists(path):
+        return None
+    elif (type & S_IFREG) or (type & S_IFIFO):
+        return 0
+    else:
+        return None   
+
+
 def format_write(file_descriptor, byte_count):
     if file_descriptor in file_descriptors:
         path = file_descriptors[file_descriptor]
@@ -314,13 +324,13 @@ SyscallFilter(
 SyscallFilter(
     name="mkfifo",
     signature=("int", (("const char *", "pathname"), ("mode_t", "mode"),)),
-    format=lambda args: format_mknod(args[0],S_IFIFO),
+    format=lambda args: format_mknod(args[0], S_IFIFO),
     substitute=return_zero
 ),
 SyscallFilter(
     name="mkfifoat",
     signature=("int", (("int", "dirfd"), ("const char *", "pathname"), ("mode_t", "mode"),)),
-    format=lambda args: format_mknod(args[1],S_IFIFO),
+    format=lambda args: format_mknod(args[1], S_IFIFO),
     substitute=return_zero
 ),
 # Write to file
