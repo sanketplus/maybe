@@ -313,25 +313,25 @@ SyscallFilter(
     name="mknod",
     signature=("int", (("const char *", "pathname"), ("mode_t", "mode"),)),
     format=lambda args: format_mknod(args[0], args[1]),
-    substitute=return_zero
+    substitute=lambda args: substitute_mknod(args[0], args[1]),
 ),
 SyscallFilter(
     name="mknodat",
     signature=("int", (("int", "dirfd"), ("const char *", "pathname"), ("mode_t", "mode"),)),
     format=lambda args: format_mknod(args[1], args[2]),
-    substitute=return_zero
+    substitute=lambda args: substitute_mknod(args[1], args[2]),
 ),
 SyscallFilter(
     name="mkfifo",
     signature=("int", (("const char *", "pathname"), ("mode_t", "mode"),)),
     format=lambda args: format_mknod(args[0], S_IFIFO),
-    substitute=return_zero
+    substitute=lambda args: substitute_mknod(args[0], S_IFIFO),
 ),
 SyscallFilter(
     name="mkfifoat",
     signature=("int", (("int", "dirfd"), ("const char *", "pathname"), ("mode_t", "mode"),)),
     format=lambda args: format_mknod(args[1], S_IFIFO),
-    substitute=return_zero
+    substitute=lambda args: substitute_mknod(args[1], S_IFIFO),
 ),
 # Write to file
 # TODO: Handle "fwrite"?
