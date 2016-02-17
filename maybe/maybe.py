@@ -19,6 +19,7 @@ from ptrace.func_call import FunctionCallOptions
 from ptrace.syscall import SYSCALL_PROTOTYPES, FILENAME_ARGUMENTS
 from ptrace.syscall.posix_constants import SYSCALL_ARG_DICT
 from ptrace.syscall.syscall_argument import ARGUMENT_CALLBACK
+from os import path, getcwd
 
 from .syscall_filters import SYSCALL_FILTERS
 from .utilities import T, SYSCALL_REGISTER, RETURN_VALUE_REGISTER
@@ -48,6 +49,8 @@ SYSCALL_FILTERS = {syscall_filter.name: syscall_filter for syscall_filter in SYS
 SYSCALL_ARG_DICT.clear()
 ARGUMENT_CALLBACK.clear()
 
+#will keep track of current path
+currentPath=[]
 
 def prepareProcess(process):
     process.syscall()
@@ -66,6 +69,11 @@ def parse_argument(argument):
         # Note that "int" with base 0 infers the base from the prefix
         return int(argument, 0)
 
+def add_to_currentpath(arg):
+    if arg[-1]!="/":
+        arg=arg+"/"
+    currentPath.append(arg)
+
 
 format_options = FunctionCallOptions(
     replace_socketcall=False,
@@ -75,6 +83,7 @@ format_options = FunctionCallOptions(
 
 def get_operations(debugger):
     operations = []
+    old_args=[]
 
     while True:
         if not debugger:
@@ -109,7 +118,21 @@ def get_operations(debugger):
             arguments = [parse_argument(argument) for argument in syscall.arguments]
 
             operation = syscall_filter.format(arguments)
-            if operation is not None:
+
+            # will extend currentpath if system call is different than previous one
+            if syscall.name == "openat":
+                if (old_args==[]) or (old_args[0]!=arguments[0] or old_args[1]!=arguments[1]):
+                    add_to_currentpath(arguments[1])
+                old_args=arguments[:]
+
+            if syscall.name == "unlinkat":
+                full_path=getcwd()+"/"+"".join(currentPath)
+                if path.isfile(full_path+arguments[1]):   
+                    operations.append(operation.split(" ")[0]+" "+full_path+arguments[1])
+                elif path.isdir(full_path): 
+                    operations.append(operation.split(" ")[0]+" "+full_path)
+                    currentPath.pop()
+            elif operation is not None:
                 operations.append(operation)
 
             return_value = syscall_filter.substitute(arguments)
