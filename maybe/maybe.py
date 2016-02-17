@@ -18,7 +18,7 @@ from ptrace.func_call import FunctionCallOptions
 from ptrace.syscall import SYSCALL_PROTOTYPES, FILENAME_ARGUMENTS
 from ptrace.syscall.posix_constants import SYSCALL_ARG_DICT
 from ptrace.syscall.syscall_argument import ARGUMENT_CALLBACK
-import os
+from os import path, getcwd
 
 from .syscall_filters import SYSCALL_FILTERS
 from .utilities import T, SYSCALL_REGISTER, RETURN_VALUE_REGISTER
@@ -30,7 +30,7 @@ try:
     input = raw_input
 except NameError:
     pass
-currentPath=""
+currentPath=[]
 # Register filtered syscalls with python-ptrace so they are parsed correctly
 SYSCALL_PROTOTYPES.clear()
 FILENAME_ARGUMENTS.clear()
@@ -66,6 +66,12 @@ def parse_argument(argument):
         return int(argument, 0)
 
 
+def add_currentpath(arg):
+    if arg[-1]!="/":
+        arg=arg+"/"
+    currentPath.append(arg)
+
+
 format_options = FunctionCallOptions(
     replace_socketcall=False,
     string_max_length=4096,
@@ -74,8 +80,8 @@ format_options = FunctionCallOptions(
 
 def get_operations(debugger):
     global currentPath
-    currentPath=os.getcwd()
     operations = []
+    oldargs=[]
 
     while True:
         if not debugger:
@@ -112,12 +118,23 @@ def get_operations(debugger):
             print "### op::",operation
             
             if syscall.name == "openat":
-                    print "!!!detected!!!"
-                    currentPath=currentPath+"/"+arguments[1]
-                    syscall.enter()
-                    syscall.exit()
-            if operation is not None:
-                operations.append(operation+ " :: "+ currentPath)
+                if (oldargs==[]) or (oldargs[0]!=arguments[0] or oldargs[1]!=arguments[1]):
+                    add_currentpath(arguments[1])
+                    print "!!!detected!!! ",''.join(currentPath)
+                    print oldargs,"::",arguments
+                oldsyscall=syscall
+                oldargs=arguments[:]
+                print oldargs
+
+            if syscall.name == "unlinkat":
+                full_path=getcwd()+"/"+"".join(currentPath)
+                if path.isfile(full_path+arguments[1]):   
+                    operations.append(operation.split(" ")[0]+" "+full_path+arguments[1])
+                elif path.isdir(full_path): 
+                    operations.append(operation.split(" ")[0]+" "+full_path)
+                    currentPath.pop()
+            elif operation is not None:
+                operations.append(operation)
 
             return_value = syscall_filter.substitute(arguments)
             print "### return::",return_value
@@ -141,8 +158,7 @@ def main():
     # This is basically "shlex.join"
     command = " ".join([(("'%s'" % arg) if (" " in arg) else arg) for arg in argv[1:]])
     print "\n###command we got:",command
-    currentPath=os.getcwd()
-
+    print getcwd()
     arguments = argv[1:]
     arguments[0] = locateProgram(arguments[0])
     print "\n###arguments we got:",arguments
